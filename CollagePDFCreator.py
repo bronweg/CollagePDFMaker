@@ -24,6 +24,7 @@ def load_translations(language_name):
         return json.load(f)
 
 class PDFCreatorThread(QThread):
+    creationStarted = Signal()
     progressUpdated = Signal(int, str)
     creationFinished = Signal()
 
@@ -35,6 +36,7 @@ class PDFCreatorThread(QThread):
         self.min_size = min_size
 
     def run(self):
+        self.creationStarted.emit()
         placement.place_images_on_pdf(self.images, self.output_pdf_path, self.margin, self.min_size, self.updateProgress)
         self.creationFinished.emit()
 
@@ -45,12 +47,15 @@ class PDFCreatorThread(QThread):
 class ImageToPDFConverter(QWidget):
     def __init__(self):
         super().__init__()
-        self.currentLanguage = self.loadSettings()
+
+        settings = self.loadSettings()
+        self.setLanguage(settings)
         self.translations = load_translations(self.currentLanguage)
         self.setWindowTitle(self.tr("CollagePDFMaker"))
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.setupUI()
+        self.applySettings(settings)
         self.langComboBox.setCurrentText(self.currentLanguage)
         self.changeLanguage(self.currentLanguage)
 
@@ -127,6 +132,11 @@ class ImageToPDFConverter(QWidget):
         self.progressBar.setValue(0)  # start value
         self.layout.addWidget(self.progressBar)
 
+    def onPDFCreationStarted(self):
+        self.processButton.setEnabled(False)
+        self.saveSettings(self.currentLanguage, self.dirLineEdit.text(), self.fileLineEdit.text(),
+                          self.maxWidthLineEdit.text(), self.maxHeightLineEdit.text())
+
     def updateProgressBar(self, value, label):
         if label:
             self.progressLabel.setText(self.tr(label))
@@ -135,6 +145,7 @@ class ImageToPDFConverter(QWidget):
     def onPDFCreationFinished(self):
         QMessageBox.information(self, self.tr("success_title"), self.tr("success_message"))
         self.progressLabel.setText(self.tr("finished"))
+        self.processButton.setEnabled(True)
 
     def isValidNumber(self, value):
         try:
@@ -143,18 +154,41 @@ class ImageToPDFConverter(QWidget):
         except ValueError:
             return False
 
-    def saveSettings(self, language):
-        settings = {'language': language}
+    def saveSettings(self, language, directory="", outputPath="", maxWidth="", maxHeight=""):
+        settings = {
+        'language': language,
+        'directory': directory,
+        'outputPath': outputPath,
+        'maxWidth': maxWidth,
+        'maxHeight': maxHeight
+        }
         with open('settings.json', 'w') as f:
             json.dump(settings, f)
 
     def loadSettings(self):
+        default_settings = {
+            'language': 'English',
+            'directory': '',
+            'outputPath': '',
+            'maxWidth': '',
+            'maxHeight': ''
+        }
         try:
             with open('settings.json', 'r') as f:
                 settings = json.load(f)
-                return settings.get('language', 'English')
         except FileNotFoundError:
-            return 'English'
+            settings = default_settings
+
+        return settings
+
+    def setLanguage(self, settings):
+        self.currentLanguage = settings.get('language', 'English')
+
+    def applySettings(self, settings):
+        self.dirLineEdit.setText(settings.get('directory', ''))
+        self.fileLineEdit.setText(settings.get('outputPath', ''))
+        self.maxWidthLineEdit.setText(settings.get('maxWidth', ''))
+        self.maxHeightLineEdit.setText(settings.get('maxHeight', ''))
 
     def chooseDirectory(self):
         dirPath = QFileDialog.getExistingDirectory(self, self.tr("Select Directory"))
@@ -191,6 +225,7 @@ class ImageToPDFConverter(QWidget):
             return
         try:
             self.pdfThread = PDFCreatorThread(images, output_pdf_path, margin_points, min_size)
+            self.pdfThread.creationStarted.connect(self.onPDFCreationStarted)
             self.pdfThread.progressUpdated.connect(self.updateProgressBar)
             self.pdfThread.creationFinished.connect(self.onPDFCreationFinished)
             self.pdfThread.start()
@@ -201,7 +236,8 @@ class ImageToPDFConverter(QWidget):
     def changeLanguage(self, language):
         self.currentLanguage = language
         self.translations = load_translations(language)
-        self.saveSettings(language)
+        self.saveSettings(language, self.dirLineEdit.text(), self.fileLineEdit.text(),
+                      self.maxWidthLineEdit.text(), self.maxHeightLineEdit.text())
 
         # Update texts
         self.setWindowTitle(self.tr("title"))

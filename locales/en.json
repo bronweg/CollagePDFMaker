@@ -16,7 +16,7 @@
   "directory_not_found": "The specified directory does not exist.",
   "no_images_found": "No supported images found in the directory.",
   "no_in_or_out": "Please specify both the source directory and the output PDF path.",
-  "calculation": "Place calculation...",
+  "calculation": "Placement calculation...",
   "placement": "Placement in progress...",
-  "finished": "Finished"
+  "finished": "Placement finished"
 }
