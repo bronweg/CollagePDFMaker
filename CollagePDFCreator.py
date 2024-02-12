@@ -1,13 +1,11 @@
 import sys
 import os
 import json
+import placement
 from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
                                QLineEdit, QFileDialog, QComboBox, QMessageBox)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import (QIcon, QPixmap)
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from PIL import Image
 
 def load_language_codes():
     path = "locales/language_codes.json"
@@ -24,53 +22,6 @@ def load_translations(language_name):
     path = f"locales/{language_code}.json"
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
-
-def cm_to_points(cm):
-    inches = cm / 2.54
-    return inches * 72
-
-def resize_image(image_path, max_width_points, max_height_points):
-    with Image.open(image_path) as img:
-        img_ratio = img.width / img.height
-        if img.width / img.height > max_width_points / max_height_points:
-            new_width = min(img.width, max_width_points)
-            new_height = int(new_width / img_ratio)
-        else:
-            new_height = min(img.height, max_height_points)
-            new_width = int(new_height * img_ratio)
-        return image_path, new_width, new_height
-
-def collect_and_resize_images(directory, max_width_cm, max_height_cm):
-    max_width_points = cm_to_points(max_width_cm)
-    max_height_points = cm_to_points(max_height_cm)
-    images = []
-    for root, _, files in os.walk(directory):
-        for filename in files:
-            if filename.lower().endswith(('png', 'jpg', 'jpeg', 'gif', 'bmp')):
-                path = os.path.join(root, filename)
-                images.append(resize_image(path, max_width_points, max_height_points))
-    return images
-
-def place_images_on_pdf(images, output_pdf_path, margin_points):
-    c = canvas.Canvas(output_pdf_path, pagesize=A4)
-    page_width, page_height = A4
-    margin = margin_points
-    x, y = margin, page_height - margin
-    max_row_height = 0
-
-    for path, img_width, img_height in images:
-        if x + img_width > page_width - margin:
-            x = margin
-            y -= max_row_height + margin
-            max_row_height = 0
-        if y - img_height < margin:
-            c.showPage()
-            x, y = margin, page_height - margin
-            max_row_height = 0
-        c.drawImage(path, x, y - img_height, width=img_width, height=img_height)
-        x += img_width + margin
-        max_row_height = max(max_row_height, img_height)
-    c.save()
 
 class ImageToPDFConverter(QWidget):
     def __init__(self):
@@ -194,14 +145,14 @@ class ImageToPDFConverter(QWidget):
         max_width_cm = float(self.maxWidthLineEdit.text())
         max_height_cm = float(self.maxHeightLineEdit.text())
         margin_cm = float(self.marginLineEdit.text())
-        margin_points = cm_to_points(margin_cm)
+        margin_points = placement.cm_to_points(margin_cm)
+        images, min_size = placement.collect_and_resize_images(directory, max_width_cm, max_height_cm)
 
-        images = collect_and_resize_images(directory, max_width_cm, max_height_cm)
         if not images:
             QMessageBox.warning(self, self.tr("error_title"), self.tr("no_images_found"))
             return
         try:
-            place_images_on_pdf(images, output_pdf_path, margin_points)
+            placement.place_images_on_pdf(images, output_pdf_path, margin_points, min_size)
             QMessageBox.information(self, self.tr("success_title"), self.tr("success_message"))
         except Exception as e:
             errorMessage = f"{self.tr('pdf_creation_failed')} {str(e)}"
