@@ -3,7 +3,7 @@ import os
 import json
 import placement
 from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-                               QLineEdit, QFileDialog, QComboBox, QMessageBox)
+                               QLineEdit, QFileDialog, QComboBox, QMessageBox, QProgressBar)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import (QIcon, QPixmap)
 
@@ -98,6 +98,15 @@ class ImageToPDFConverter(QWidget):
         self.processButton.clicked.connect(self.processImages)
         self.layout.addWidget(self.processButton)
 
+        # Progress Bar
+        self.progressBar = QProgressBar(self)
+        self.progressBar.setMaximum(100)  # 100% completion
+        self.progressBar.setValue(0)  # start value
+        self.layout.addWidget(self.progressBar)
+
+    def updateProgressBar(self, value):
+        self.progressBar.setValue(value)
+
     def isValidNumber(self, value):
         try:
             val = float(value)
@@ -152,7 +161,7 @@ class ImageToPDFConverter(QWidget):
             QMessageBox.warning(self, self.tr("error_title"), self.tr("no_images_found"))
             return
         try:
-            placement.place_images_on_pdf(images, output_pdf_path, margin_points, min_size)
+            placement.place_images_on_pdf(images, output_pdf_path, margin_points, min_size, self.updateProgressBar)
             QMessageBox.information(self, self.tr("success_title"), self.tr("success_message"))
         except Exception as e:
             errorMessage = f"{self.tr('pdf_creation_failed')} {str(e)}"

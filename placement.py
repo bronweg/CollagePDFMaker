@@ -200,7 +200,7 @@ def reposition(virtual_canvas, position, right_unused, bottom_unused, image, doc
             position.max_row_height = 0
 
 
-def place_images_on_pdf(images, output_pdf_path, margin, min_size):
+def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_callback):
     virtual_canvas = VirtualCanvas()
 
     document = VirtualDocument(margin)
@@ -216,6 +216,7 @@ def place_images_on_pdf(images, output_pdf_path, margin, min_size):
     for image in images:
         calculated_progress = math.floor((done / len(images))*100)
         print(f'CALCULATION IS DONE for {str(calculated_progress)}%: {str(done)} of {str(len(images))}')
+        progress_callback(calculated_progress)
         done += 1
 
         if try_use_unused(virtual_canvas, right_unused, bottom_unused, image, document, min_size):
@@ -229,6 +230,7 @@ def place_images_on_pdf(images, output_pdf_path, margin, min_size):
 
     calculated_progress = math.floor((done / len(images))*100)
     print(f'CALCULATION IS DONE for {str(calculated_progress)}%: {str(done)} of {str(len(images))}')
+    progress_callback(calculated_progress)
 
     virtual_canvas.makeItReal(output_pdf_path)
     print(f'\n\nStill right unused\n {str(right_unused)}')

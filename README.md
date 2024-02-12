@@ -14,7 +14,7 @@ For ease of use, pre-built executables for Windows, macOS, and Linux are availab
 
 ### Prerequisites
 Before you begin, ensure you have met the following requirements:
-- Python 3.8 or higher
+- Python 3.10 or higher
 - PyQt6
 - Pillow for image processing
 - ReportLab for PDF generation
