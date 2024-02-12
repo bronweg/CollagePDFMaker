@@ -42,20 +42,34 @@ class VirtualCanvas:
         placed_progress = 0
         for page in self.canvas:
             for placement in page:
-                if not placement.rotated:
-                    real.drawImage(placement.image.path, placement.x, placement.y, width=placement.image.width, height=placement.image.height)
-                else:
-                    with Image.open(placement.image.path) as be_rotated:
-                        rotated = be_rotated.transpose(Image.ROTATE_90)
-                        real.drawImage(ImageReader(rotated), placement.x, placement.y, width=placement.image.width, height=placement.image.height)
-
-                done += 1
-                placed_progress = math.floor((done / self.length)*100)
-                print(f'PLACEMENT IS DONE for {str(placed_progress)}%: {str(done)} of {str(self.length)}')
-
+                self.drawReal(real, placement)
+                done = self.updateProgress(done)
             real.showPage()
         real.save()
 
+    def updateProgress(self, done):
+        done += 1
+        placed_progress = math.floor((done / self.length)*100)
+        print(f'PLACEMENT IS DONE for {str(placed_progress)}%: {str(done)} of {str(self.length)}')
+        return done
+
+
+    @classmethod
+    def drawReal(cls, real, placement):
+        if placement.rotated:
+            cls.drawRealRotated(real, placement)
+        else:
+            cls.drawRealDirect(real, placement)
+
+    @staticmethod
+    def drawRealRotated(real, placement):
+        with Image.open(placement.image.path) as be_rotated:
+            rotated = be_rotated.transpose(Image.ROTATE_90)
+            real.drawImage(ImageReader(rotated), placement.x, placement.y, width=placement.image.width, height=placement.image.height)
+
+    @staticmethod
+    def drawRealDirect(real, placement):
+        real.drawImage(placement.image.path, placement.x, placement.y, width=placement.image.width, height=placement.image.height)
 
 class VirtualDocument:
     def __init__(self, margin):
