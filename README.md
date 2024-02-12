@@ -1,3 +1,4 @@
+[![Build Executable with Icon](https://github.com/bronweg/CollagePDFMaker/actions/workflows/build-executable.yml/badge.svg)](https://github.com/bronweg/CollagePDFMaker/actions/workflows/build-executable.yml)
 # CollagePDFMaker
 ![App Icon](images/logo.png)
 CollagePDFMaker is a desktop application designed to create PDF documents from images. It allows users to select a directory with images, specify maximum dimensions for the images in the PDF, and efficiently arrange them on multiple pages to minimize paper usage when printing.
