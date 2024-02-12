@@ -1,14 +1,14 @@
 name: Build Executable with Icon
 
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'CollagePDFCreator.py'
-      - 'placement.py'
-      - 'images/**'
-      - 'locales/**'
+#on:
+#  push:
+#    branches:
+#      - main
+#    paths:
+#      - 'CollagePDFCreator.py'
+#      - 'placement.py'
+#      - 'images/**'
+#      - 'locales/**'
 
 jobs:
   build:
