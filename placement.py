@@ -8,17 +8,17 @@ import os
 
 
 class VirtualImage:
-    def __init__(self, path, width, height):
+    def __init__(self, path, width, height, rotated):
         self.path = path
         self.width = width
         self.height = height
+        self.rotated = rotated
 
 class VirtualPlacement:
-    def __init__(self, image, x, y, rotated):
+    def __init__(self, image, x, y):
         self.image = image
         self.x = x
         self.y = y
-        self.rotated = rotated
 
 class VirtualCanvas:
     def __init__(self, progress_callback):
@@ -31,10 +31,10 @@ class VirtualCanvas:
         self.canvas.append([])
         self.current_page += 1
 
-    def drawImage(self, image, x, y, rotated=False, page=None):
+    def drawImage(self, image, x, y, page=None):
         if page is None:
             page = self.current_page
-        self.canvas[page].append(VirtualPlacement(image, x, y,rotated))
+        self.canvas[page].append(VirtualPlacement(image, x, y))
         self.length += 1
 
     def makeItReal(self, output_pdf_path):
@@ -59,7 +59,7 @@ class VirtualCanvas:
 
     @classmethod
     def drawReal(cls, real, placement):
-        if placement.rotated:
+        if placement.image.rotated:
             cls.drawRealRotated(real, placement)
         else:
             cls.drawRealDirect(real, placement)
@@ -103,14 +103,27 @@ def cm_to_points(cm):
 
 def resize_image(image_path, max_width_points, max_height_points):
     with Image.open(image_path) as img:
-        img_ratio = img.width / img.height
-        if img.width / img.height > max_width_points / max_height_points:
-            new_width = min(img.width, max_width_points)
+
+        rotated = False
+        width =  img.width
+        height = img.height
+
+        direction_flag = (img.width - img.height) * (max_width_points - max_height_points)
+        if direction_flag < 0:
+            rotated = True
+            width = img.height
+            height = img.width
+
+        img_ratio = width / height
+
+        if img_ratio > max_width_points / max_height_points:
+            new_width = min(width, max_width_points)
             new_height = int(new_width / img_ratio)
         else:
-            new_height = min(img.height, max_height_points)
+            new_height = min(height, max_height_points)
             new_width = int(new_height * img_ratio)
-        return VirtualImage(image_path, new_width, new_height)
+
+        return VirtualImage(image_path, new_width, new_height, rotated)
 
 def collect_and_resize_images(directory, max_width_cm, max_height_cm):
     max_width_points = cm_to_points(max_width_cm)
@@ -128,14 +141,13 @@ def collect_and_resize_images(directory, max_width_cm, max_height_cm):
     return images, min_size
 
 
-def try_use_unused_right(virtual_canvas, right_unused, image, document, min_size, rotated=False):
+def try_use_unused_right(virtual_canvas, right_unused, image, document, min_size):
     wide_index = bisect.bisect_left(right_unused, image.width, key = lambda vs:vs.space)
     wide_count = len(right_unused)
     if wide_index < wide_count:
         put_here = right_unused.pop(wide_index)
-        print(f'The image with rotation={rotated} of width {str(image.width)} can be inserted at free right space: {str(put_here)}')
-        virtual_canvas.drawImage(image, put_here.x, put_here.y - image.height,
-                                 rotated=rotated, page=put_here.page)
+        print(f'The image with rotation={image.rotated} of width {str(image.width)} can be inserted at free right space: {str(put_here)}')
+        virtual_canvas.drawImage(image, put_here.x, put_here.y - image.height, page=put_here.page)
 
         new_x = put_here.x + image.width + document.margin
         new_space = document.page_right-new_x
@@ -145,15 +157,14 @@ def try_use_unused_right(virtual_canvas, right_unused, image, document, min_size
 
     return False
 
-def try_use_unused_bottom(virtual_canvas, bottom_unused, image, document, min_size, rotated=False):
+def try_use_unused_bottom(virtual_canvas, bottom_unused, image, document, min_size):
     height_index = bisect.bisect_left(bottom_unused, image.height, key = lambda vs:vs.space)
     height_count = len(bottom_unused)
     while height_index < height_count:
         put_here = bottom_unused[height_index]
         if put_here.x + image.width <= document.page_right:
-            print(f'The image with rotation={rotated} of height {str(image.height)} can be inserted at free bottom space: {str(put_here)}')
-            virtual_canvas.drawImage(image, put_here.x, put_here.y - image.height,
-                                     rotated=rotated, page=put_here.page)
+            print(f'The image with rotation={image.rotated} of height {str(image.height)} can be inserted at free bottom space: {str(put_here)}')
+            virtual_canvas.drawImage(image, put_here.x, put_here.y - image.height, page=put_here.page)
             new_x = put_here.x + image.width + document.margin
             if new_x + min_size <= document.page_right:
                 bottom_unused[height_index] = VirtualSpace(put_here.space, new_x, put_here.y, put_here.page)
@@ -167,7 +178,7 @@ def try_use_unused_bottom(virtual_canvas, bottom_unused, image, document, min_si
     return False
 
 def rotate(image):
-    return VirtualImage(image.path, image.height, image.width)
+    return VirtualImage(image.path, image.height, image.width, not image.rotated)
 
 def try_use_unused(virtual_canvas, right_unused, bottom_unused, image, document, min_size):
     return try_use_unused_right(
@@ -175,9 +186,9 @@ def try_use_unused(virtual_canvas, right_unused, bottom_unused, image, document,
     ) or try_use_unused_bottom(
         virtual_canvas, bottom_unused, image, document, min_size
     ) or try_use_unused_right(
-        virtual_canvas, right_unused, rotate(image), document, min_size, True
+        virtual_canvas, right_unused, rotate(image), document, min_size
     ) or try_use_unused_bottom(
-        virtual_canvas, bottom_unused, rotate(image), document, min_size, True
+        virtual_canvas, bottom_unused, rotate(image), document, min_size
     )
 
 
@@ -257,7 +268,7 @@ def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_call
 if __name__ == "__main__":
     directory = "/Users/betty/PythonProjects/image_resize/photos"
     max_width_cm, max_height_cm = 5, 10
-    output_pdf_path = "/Users/betty/PythonProjects/image_resize/output_images.pdf"
+    output_pdf_path = "/Users/betty/PythonProjects/image_resize/output_images_direction.pdf"
     images, min_size = collect_and_resize_images(directory, max_width_cm, max_height_cm)
     place_images_on_pdf(images, output_pdf_path, cm_to_points(0.3), min_size)
     print(f"PDF document '{output_pdf_path}' has been created with images.")
