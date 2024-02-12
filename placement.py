@@ -105,17 +105,15 @@ def resize_image(image_path, max_width_points, max_height_points):
     with Image.open(image_path) as img:
 
         rotated = False
-        width =  img.width
+        width = img.width
         height = img.height
 
-        direction_flag = (img.width - img.height) * (max_width_points - max_height_points)
-        if direction_flag < 0:
+        if (width - height) * (max_width_points - max_height_points) < 0:
             rotated = True
             width = img.height
             height = img.width
 
         img_ratio = width / height
-
         if img_ratio > max_width_points / max_height_points:
             new_width = min(width, max_width_points)
             new_height = int(new_width / img_ratio)
@@ -270,5 +268,5 @@ if __name__ == "__main__":
     max_width_cm, max_height_cm = 5, 10
     output_pdf_path = "/Users/betty/PythonProjects/image_resize/output_images_direction.pdf"
     images, min_size = collect_and_resize_images(directory, max_width_cm, max_height_cm)
-    place_images_on_pdf(images, output_pdf_path, cm_to_points(0.3), min_size)
+    place_images_on_pdf(images, output_pdf_path, cm_to_points(0.2), min_size)
     print(f"PDF document '{output_pdf_path}' has been created with images.")
