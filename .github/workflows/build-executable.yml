@@ -10,6 +10,8 @@ name: Build Executable with Icon
 #      - 'images/**'
 #      - 'locales/**'
 
+on: [workflow_dispatch]
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
