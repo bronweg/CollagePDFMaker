@@ -8,5 +8,11 @@
   "process_button": "עבד תמונות",
   "choose_directory": "בחר...",
   "choose_output": "בחר...",
-  "success_message": "ה-PDF נוצר בהצלחה!"
+  "success_message": "ה-PDF נוצר בהצלחה!",
+  "error_title": "שגיאה",
+  "pdf_creation_failed": "נכשל ביצירת PDF.",
+  "invalid_input": "אנא בדוק את הערכים שהוזנו.",
+  "directory_not_found": "התיקייה שצוינה אינה קיימת.",
+  "no_images_found": "לא נמצאו תמונות נתמכות בתיקייה.",
+  "no_in_or_out": "נא לציין את התיקייה המקורית ונתיב לשמירת ה-PDF."
 }

@@ -8,5 +8,11 @@
   "process_button": "Создать PDF",
   "choose_directory": "Выбрать...",
   "choose_output": "Выбрать...",
-  "success_message": "PDF успешно создан!"
+  "success_message": "PDF успешно создан!",
+  "error_title": "Ошибка",
+  "pdf_creation_failed": "Не удалось создать PDF.",
+  "invalid_input": "Пожалуйста, проверьте введенные данные.",
+  "directory_not_found": "Указанная директория не существует.",
+  "no_images_found": "В директории не найдены поддерживаемые изображения.",
+  "no_in_or_out": "Пожалуйста, укажите исходную директорию и путь для сохранения PDF."
 }

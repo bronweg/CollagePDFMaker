@@ -8,5 +8,12 @@
   "process_button": "Process Images",
   "choose_directory": "Choose...",
   "choose_output": "Choose...",
-  "success_message": "PDF has been created successfully!"
+  "success_title": "Success",
+  "success_message": "PDF has been created successfully!",
+  "error_title": "Error",
+  "pdf_creation_failed": "Failed to create PDF.",
+  "invalid_input": "Please check your input values.",
+  "directory_not_found": "The specified directory does not exist.",
+  "no_images_found": "No supported images found in the directory.",
+  "no_in_or_out": "Please specify both the source directory and the output PDF path."
 }

@@ -1,7 +1,8 @@
 import sys
 import os
 import json
-from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit, QFileDialog, QComboBox, QMessageBox)
+from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
+                               QLineEdit, QFileDialog, QComboBox, QMessageBox)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import (QIcon, QPixmap)
 from reportlab.pdfgen import canvas
@@ -146,6 +147,13 @@ class ImageToPDFConverter(QWidget):
         self.processButton.clicked.connect(self.processImages)
         self.layout.addWidget(self.processButton)
 
+    def isValidNumber(self, value):
+        try:
+            val = float(value)
+            return val > 0
+        except ValueError:
+            return False
+
     def saveSettings(self, language):
         settings = {'language': language}
         with open('settings.json', 'w') as f:
@@ -168,6 +176,19 @@ class ImageToPDFConverter(QWidget):
         self.fileLineEdit.setText(filePath)
 
     def processImages(self):
+        if not os.path.isdir(self.dirLineEdit.text()):
+            QMessageBox.warning(self, self.tr("error_title"), self.tr("directory_not_found"))
+            return
+
+        if not self.dirLineEdit.text() or not self.fileLineEdit.text():
+            QMessageBox.warning(self, self.tr("error_title"), self.tr("no_in_or_out"))
+            return
+
+        if not self.isValidNumber(self.maxWidthLineEdit.text()) or not self.isValidNumber(
+                self.maxHeightLineEdit.text()):
+            QMessageBox.warning(self, self.tr("error_title"), self.tr("invalid_input"))
+            return
+
         directory = self.dirLineEdit.text()
         output_pdf_path = self.fileLineEdit.text()
         max_width_cm = float(self.maxWidthLineEdit.text())
@@ -176,8 +197,15 @@ class ImageToPDFConverter(QWidget):
         margin_points = cm_to_points(margin_cm)
 
         images = collect_and_resize_images(directory, max_width_cm, max_height_cm)
-        place_images_on_pdf(images, output_pdf_path, margin_points)
-        QMessageBox.information(self, self.tr("Success"), self.tr("PDF has been created successfully!"))
+        if not images:
+            QMessageBox.warning(self, self.tr("error_title"), self.tr("no_images_found"))
+            return
+        try:
+            place_images_on_pdf(images, output_pdf_path, margin_points)
+            QMessageBox.information(self, self.tr("success_title"), self.tr("success_message"))
+        except Exception as e:
+            errorMessage = f"{self.tr('pdf_creation_failed')} {str(e)}"
+            QMessageBox.warning(self, self.tr("error_title"), errorMessage)
 
     def changeLanguage(self, language):
         self.currentLanguage = language
