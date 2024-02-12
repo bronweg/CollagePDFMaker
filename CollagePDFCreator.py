@@ -98,6 +98,10 @@ class ImageToPDFConverter(QWidget):
         self.processButton.clicked.connect(self.processImages)
         self.layout.addWidget(self.processButton)
 
+        # Progress Bar Label
+        self.progressLabel = QLabel("")
+        self.layout.addWidget(self.progressLabel)
+
         # Progress Bar
         self.progressBar = QProgressBar(self)
         self.progressBar.setMaximum(100)  # 100% completion
