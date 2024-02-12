@@ -1,0 +1,12 @@
+{
+  "title": "Конвертер изображений в PDF",
+  "directory_label": "Папка с изображениями:",
+  "output_label": "Путь для сохранения PDF:",
+  "max_width": "Максимальная ширина изображения (см):",
+  "max_height": "Максимальная высота изображения (см):",
+  "margin": "Отступы (см):",
+  "process_button": "Создать PDF",
+  "choose_directory": "Выбрать...",
+  "choose_output": "Выбрать...",
+  "success_message": "PDF успешно создан!"
+}

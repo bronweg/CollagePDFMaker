@@ -1,0 +1,12 @@
+{
+  "title": "המרת תמונות ל-PDF",
+  "directory_label": "תיקייה עם תמונות:",
+  "output_label": "נתיב לקובץ PDF:",
+  "max_width": "רוחב מקסימלי לתמונה (ס\"מ):",
+  "max_height": "גובה מקסימלי לתמונה (ס\"מ):",
+  "margin": "שוליים (ס\"מ):",
+  "process_button": "עבד תמונות",
+  "choose_directory": "בחר...",
+  "choose_output": "בחר...",
+  "success_message": "ה-PDF נוצר בהצלחה!"
+}

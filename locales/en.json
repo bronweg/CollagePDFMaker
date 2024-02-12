@@ -1,0 +1,12 @@
+{
+  "title": "Images to PDF Converter",
+  "directory_label": "Directory with Images:",
+  "output_label": "Output PDF Path:",
+  "max_width": "Max Image Width (cm):",
+  "max_height": "Max Image Height (cm):",
+  "margin": "Margin (cm):",
+  "process_button": "Process Images",
+  "choose_directory": "Choose...",
+  "choose_output": "Choose...",
+  "success_message": "PDF has been created successfully!"
+}

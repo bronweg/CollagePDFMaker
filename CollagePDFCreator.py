@@ -8,6 +8,22 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from PIL import Image
 
+def load_language_codes():
+    path = "locales/language_codes.json"
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def load_language_names():
+    language_codes = load_language_codes()
+    return list(language_codes.keys())
+
+def load_translations(language_name):
+    language_codes = load_language_codes()
+    language_code = language_codes.get(language_name, "en")
+    path = f"locales/{language_code}.json"
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
 def cm_to_points(cm):
     inches = cm / 2.54
     return inches * 72
@@ -58,34 +74,9 @@ def place_images_on_pdf(images, output_pdf_path, margin_points):
 class ImageToPDFConverter(QWidget):
     def __init__(self):
         super().__init__()
-        self.texts = {
-            "English": {
-                "title": "Images to PDF Converter",
-                "directory_label": "Directory with Images:",
-                "output_label": "Output PDF Path:",
-                "max_width": "Max Image Width (cm):",
-                "max_height": "Max Image Height (cm):",
-                "margin": "Margin (cm):",
-                "process_button": "Process Images",
-                "choose_directory": "Choose...",
-                "choose_output": "Choose...",
-                "success_message": "PDF has been created successfully!"
-            },
-            "עברית": {
-                "title": "המרת תמונות ל-PDF",
-                "directory_label": "תיקייה עם תמונות:",
-                "output_label": "נתיב לקובץ PDF:",
-                "max_width": "רוחב מקסימלי לתמונה (ס\"מ):",
-                "max_height": "גובה מקסימלי לתמונה (ס\"מ):",
-                "margin": "שוליים (ס\"מ):",
-                "process_button": "עבד תמונות",
-                "choose_directory": "בחר...",
-                "choose_output": "בחר...",
-                "success_message": "ה-PDF נוצר בהצלחה!"
-            }
-        }
         self.currentLanguage = self.loadSettings()
-        self.setWindowTitle(self.tr("Images to PDF Converter"))
+        self.translations = load_translations(self.currentLanguage)
+        self.setWindowTitle(self.tr("CollagePDFMaker"))
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.setupUI()
@@ -104,7 +95,8 @@ class ImageToPDFConverter(QWidget):
         # Language selection
         self.languageLabel = QLabel(self.tr("Language:"))
         self.langComboBox = QComboBox()
-        self.langComboBox.addItems(list(self.texts.keys()))
+        language_names = load_language_names()
+        self.langComboBox.addItems(language_names)
         self.langComboBox.currentTextChanged.connect(self.changeLanguage)
         langLayout = QHBoxLayout()
         langLayout.addWidget(self.languageLabel)
@@ -189,29 +181,30 @@ class ImageToPDFConverter(QWidget):
 
     def changeLanguage(self, language):
         self.currentLanguage = language
+        self.translations = load_translations(language)
         self.saveSettings(language)
-        is_rtl = (language == "עברית")
 
         # Update texts
-        self.setWindowTitle(self.tr(self.texts[language]["title"]))
-        self.dirLabel.setText(self.tr(self.texts[language]["directory_label"]))
-        self.fileLabel.setText(self.tr(self.texts[language]["output_label"]))
-        self.maxWidthLabel.setText(self.tr(self.texts[language]["max_width"]))
-        self.maxHeightLabel.setText(self.tr(self.texts[language]["max_height"]))
-        self.marginLabel.setText(self.tr(self.texts[language]["margin"]))
-        self.processButton.setText(self.tr(self.texts[language]["process_button"]))
-        self.dirButton.setText(self.tr(self.texts[language]["choose_directory"]))
-        self.fileButton.setText(self.tr(self.texts[language]["choose_output"]))
+        self.setWindowTitle(self.tr("title"))
+        self.dirLabel.setText(self.tr("directory_label"))
+        self.fileLabel.setText(self.tr("output_label"))
+        self.maxWidthLabel.setText(self.tr("max_width"))
+        self.maxHeightLabel.setText(self.tr("max_height"))
+        self.marginLabel.setText(self.tr("margin"))
+        self.processButton.setText(self.tr("process_button"))
+        self.dirButton.setText(self.tr("choose_directory"))
+        self.fileButton.setText(self.tr("choose_output"))
 
         # Update layout
+        is_rtl = (language == "עברית")
         self.dirLayout.setDirection(QHBoxLayout.RightToLeft if is_rtl else QHBoxLayout.LeftToRight)
         self.fileLayout.setDirection(QHBoxLayout.RightToLeft if is_rtl else QHBoxLayout.LeftToRight)
 
-    def tr(self, text):
-        return self.texts[self.currentLanguage].get(text, text)
+    def tr(self, text_key):
+        return self.translations.get(text_key, text_key)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = ImageToPDFConverter()
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
