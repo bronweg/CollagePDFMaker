@@ -21,10 +21,11 @@ class VirtualPlacement:
         self.rotated = rotated
 
 class VirtualCanvas:
-    def __init__(self):
+    def __init__(self, progress_callback):
         self.canvas = [[]]
         self.current_page = 0
         self.length = 0
+        self.progress_callback = progress_callback
 
     def showPage(self):
         self.canvas.append([])
@@ -40,6 +41,7 @@ class VirtualCanvas:
         real = canvas.Canvas(output_pdf_path, pagesize=A4)
         done = 0
         placed_progress = 0
+        self.progress_callback(placed_progress, 'placement')
         for page in self.canvas:
             for placement in page:
                 self.drawReal(real, placement)
@@ -51,6 +53,7 @@ class VirtualCanvas:
         done += 1
         placed_progress = math.floor((done / self.length)*100)
         print(f'PLACEMENT IS DONE for {str(placed_progress)}%: {str(done)} of {str(self.length)}')
+        self.progress_callback(placed_progress)
         return done
 
 
@@ -200,8 +203,16 @@ def reposition(virtual_canvas, position, right_unused, bottom_unused, image, doc
             position.max_row_height = 0
 
 
+def updateProgress(done, total, progress_callback):
+    done += 1
+    calculated_progress = math.floor((done / total)*100)
+    print(f'CALCULATION IS DONE for {str(calculated_progress)}%: {str(done)} of {str(total)}')
+    progress_callback(calculated_progress)
+    return done
+
+
 def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_callback):
-    virtual_canvas = VirtualCanvas()
+    virtual_canvas = VirtualCanvas(progress_callback)
 
     document = VirtualDocument(margin)
 
@@ -211,13 +222,12 @@ def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_call
     bottom_unused = []
 
     done = 0
+    total = len(images)
     calculated_progress = 0
+    progress_callback(calculated_progress, 'calculation')
 
     for image in images:
-        calculated_progress = math.floor((done / len(images))*100)
-        print(f'CALCULATION IS DONE for {str(calculated_progress)}%: {str(done)} of {str(len(images))}')
-        progress_callback(calculated_progress)
-        done += 1
+        done = updateProgress(done, total, progress_callback)
 
         if try_use_unused(virtual_canvas, right_unused, bottom_unused, image, document, min_size):
             continue
@@ -228,9 +238,7 @@ def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_call
         position.x += image.width + document.margin
         position.max_row_height = max(position.max_row_height, image.height)
 
-    calculated_progress = math.floor((done / len(images))*100)
-    print(f'CALCULATION IS DONE for {str(calculated_progress)}%: {str(done)} of {str(len(images))}')
-    progress_callback(calculated_progress)
+    updateProgress(done, total, progress_callback)
 
     virtual_canvas.makeItReal(output_pdf_path)
     print(f'\n\nStill right unused\n {str(right_unused)}')
@@ -241,8 +249,7 @@ def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_call
 if __name__ == "__main__":
     directory = "photos"
     max_width_cm, max_height_cm = 5, 10
-    margin = cm_to_points(0.3)
     output_pdf_path = "output_images.pdf"
     images, min_size = collect_and_resize_images(directory, max_width_cm, max_height_cm)
-    place_images_on_pdf(images, output_pdf_path, margin, min_size)
+    place_images_on_pdf(images, output_pdf_path, cm_to_points(0.3), min_size)
     print(f"PDF document '{output_pdf_path}' has been created with images.")

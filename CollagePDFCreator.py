@@ -4,7 +4,7 @@ import json
 import placement
 from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
                                QLineEdit, QFileDialog, QComboBox, QMessageBox, QProgressBar)
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import (QIcon, QPixmap)
 
 def load_language_codes():
@@ -22,6 +22,25 @@ def load_translations(language_name):
     path = f"locales/{language_code}.json"
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
+class PDFCreatorThread(QThread):
+    progressUpdated = Signal(int, str)
+    creationFinished = Signal()
+
+    def __init__(self, images, output_pdf_path, margin, min_size):
+        super().__init__()
+        self.images = images
+        self.output_pdf_path = output_pdf_path
+        self.margin = margin
+        self.min_size = min_size
+
+    def run(self):
+        placement.place_images_on_pdf(self.images, self.output_pdf_path, self.margin, self.min_size, self.updateProgress)
+        self.creationFinished.emit()
+
+    def updateProgress(self, value, label=None):
+        self.progressUpdated.emit(value, label)
+
 
 class ImageToPDFConverter(QWidget):
     def __init__(self):
@@ -108,8 +127,14 @@ class ImageToPDFConverter(QWidget):
         self.progressBar.setValue(0)  # start value
         self.layout.addWidget(self.progressBar)
 
-    def updateProgressBar(self, value):
+    def updateProgressBar(self, value, label):
+        if label:
+            self.progressLabel.setText(self.tr(label))
         self.progressBar.setValue(value)
+
+    def onPDFCreationFinished(self):
+        QMessageBox.information(self, self.tr("success_title"), self.tr("success_message"))
+        self.progressLabel.setText(self.tr("finished"))
 
     def isValidNumber(self, value):
         try:
@@ -165,8 +190,10 @@ class ImageToPDFConverter(QWidget):
             QMessageBox.warning(self, self.tr("error_title"), self.tr("no_images_found"))
             return
         try:
-            placement.place_images_on_pdf(images, output_pdf_path, margin_points, min_size, self.updateProgressBar)
-            QMessageBox.information(self, self.tr("success_title"), self.tr("success_message"))
+            self.pdfThread = PDFCreatorThread(images, output_pdf_path, margin_points, min_size)
+            self.pdfThread.progressUpdated.connect(self.updateProgressBar)
+            self.pdfThread.creationFinished.connect(self.onPDFCreationFinished)
+            self.pdfThread.start()
         except Exception as e:
             errorMessage = f"{self.tr('pdf_creation_failed')} {str(e)}"
             QMessageBox.warning(self, self.tr("error_title"), errorMessage)
