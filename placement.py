@@ -203,15 +203,23 @@ def reposition(virtual_canvas, position, right_unused, bottom_unused, image, doc
             position.max_row_height = 0
 
 
+def default_progress_callback(value, label=None):
+    if label:
+        print(f'START REPORTING ON {label}')
+    for _ in range(value):
+        print('+', end = '')
+    for _ in range(value, 100):
+        print('-', end = '')
+    print()
+
 def updateProgress(done, total, progress_callback):
-    done += 1
     calculated_progress = math.floor((done / total)*100)
     print(f'CALCULATION IS DONE for {str(calculated_progress)}%: {str(done)} of {str(total)}')
     progress_callback(calculated_progress)
-    return done
+    return done + 1
 
 
-def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_callback):
+def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_callback=default_progress_callback):
     virtual_canvas = VirtualCanvas(progress_callback)
 
     document = VirtualDocument(margin)
@@ -247,9 +255,9 @@ def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_call
 
 
 if __name__ == "__main__":
-    directory = "photos"
+    directory = "/Users/betty/PythonProjects/image_resize/photos"
     max_width_cm, max_height_cm = 5, 10
-    output_pdf_path = "output_images.pdf"
+    output_pdf_path = "/Users/betty/PythonProjects/image_resize/output_images.pdf"
     images, min_size = collect_and_resize_images(directory, max_width_cm, max_height_cm)
     place_images_on_pdf(images, output_pdf_path, cm_to_points(0.3), min_size)
     print(f"PDF document '{output_pdf_path}' has been created with images.")
