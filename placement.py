@@ -13,6 +13,10 @@ class VirtualImage:
         self.width = width
         self.height = height
         self.rotated = rotated
+    def __eq__(self, other):
+        return (self.width == other.width) and (self.height == other.height)
+    def __lt__(self, other):
+        return (self.height < other.height) or ((self.height == other.height) and (self.width < other.width))
 
 class VirtualPlacement:
     def __init__(self, image, x, y):
@@ -77,6 +81,7 @@ class VirtualCanvas:
 class VirtualDocument:
     def __init__(self, margin):
         self.margin = margin
+        self.padding = margin
         self.page_width, self.page_height = A4
         self.page_right = self.page_width - self.margin
 
@@ -135,7 +140,7 @@ def collect_and_resize_images(directory, max_width_cm, max_height_cm):
                 image = resize_image(path, max_width_points, max_height_points)
                 min_size = min(min_size, image.width, image.height)
                 images.append(image)
-    images.sort(reverse=True, key=lambda image : image.height)
+    images.sort(reverse=True)
     return images, min_size
 
 
@@ -147,7 +152,7 @@ def try_use_unused_right(virtual_canvas, right_unused, image, document, min_size
         print(f'The image with rotation={image.rotated} of width {str(image.width)} can be inserted at free right space: {str(put_here)}')
         virtual_canvas.drawImage(image, put_here.x, put_here.y - image.height, page=put_here.page)
 
-        new_x = put_here.x + image.width + document.margin
+        new_x = put_here.x + image.width + document.padding
         new_space = document.page_right-new_x
         if new_x + min_size <= document.page_right:
             bisect.insort_right(right_unused, VirtualSpace(new_space, new_x, put_here.y, put_here.page), key = lambda vs:vs.space)
@@ -163,7 +168,7 @@ def try_use_unused_bottom(virtual_canvas, bottom_unused, image, document, min_si
         if put_here.x + image.width <= document.page_right:
             print(f'The image with rotation={image.rotated} of height {str(image.height)} can be inserted at free bottom space: {str(put_here)}')
             virtual_canvas.drawImage(image, put_here.x, put_here.y - image.height, page=put_here.page)
-            new_x = put_here.x + image.width + document.margin
+            new_x = put_here.x + image.width + document.padding
             if new_x + min_size <= document.page_right:
                 bottom_unused[height_index] = VirtualSpace(put_here.space, new_x, put_here.y, put_here.page)
             else:
@@ -192,13 +197,15 @@ def try_use_unused(virtual_canvas, right_unused, bottom_unused, image, document,
 
 def reposition(virtual_canvas, position, right_unused, bottom_unused, image, document, min_size):
 
-    if position.x + image.width > document.page_right:
+    if position.max_row_height == 0:
+        position.max_row_height = image.height
+    elif position.x + image.width > document.page_right:
         space = document.page_right-position.x
         if space >= min_size:
             bisect.insort_right(right_unused, VirtualSpace(document.page_right-position.x, position.x, position.y, position.page), key = lambda vs:vs.space)
         position.x = document.margin
-        position.y -= position.max_row_height + document.margin
-        position.max_row_height = 0
+        position.y -= position.max_row_height + document.padding
+        position.max_row_height = image.height
 
         if position.y - image.height < document.margin:
             space = position.y - document.margin
@@ -209,7 +216,6 @@ def reposition(virtual_canvas, position, right_unused, bottom_unused, image, doc
             virtual_canvas.showPage()
             position.page += 1
             position.x, position.y = document.margin, document.page_height - document.margin
-            position.max_row_height = 0
 
 
 def default_progress_callback(value, label=None):
@@ -251,8 +257,7 @@ def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_call
         reposition(virtual_canvas, position, right_unused, bottom_unused, image, document, min_size)
 
         virtual_canvas.drawImage(image, position.x, position.y - image.height)
-        position.x += image.width + document.margin
-        position.max_row_height = max(position.max_row_height, image.height)
+        position.x += image.width + document.padding
 
     updateProgress(done, total, progress_callback)
 
