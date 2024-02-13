@@ -227,7 +227,6 @@ def updateProgress(done, total, progress_callback):
     progress_callback(calculated_progress)
     return done + 1
 
-
 def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_callback=default_progress_callback):
     virtual_canvas = VirtualCanvas(progress_callback)
 
