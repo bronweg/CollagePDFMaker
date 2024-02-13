@@ -1,16 +1,16 @@
 name: Build Executable with Icon
 
-#on:
-#  push:
-#    branches:
-#      - main
-#    paths:
-#      - 'CollagePDFCreator.py'
-#      - 'placement.py'
-#      - 'images/**'
-#      - 'locales/**'
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'CollagePDFCreator.py'
+      - 'placement.py'
+      - 'images/**'
+      - 'locales/**'
 
-on: [workflow_dispatch]
+#on: [workflow_dispatch]
 
 jobs:
   build:
@@ -61,7 +61,7 @@ jobs:
           else
             data_string="images/logo.png:images/"
           fi
-          pyinstaller --onefile --windowed --icon=images/logo.$([[ "${{ runner.os }}" == "Windows" ]] && echo "ico" || echo "png") --add-data "$data_string" CollagePDFCreator.py
+          pyinstaller --onefile --windowed --icon=images/logo.$([[ "${{ runner.os }}" == "Windows" ]] && echo "ico" || echo "png") --add-data "$data_string" --hidden-import=reportlab CollagePDFCreator.py
         shell: bash
 
       - name: Upload Artifacts
