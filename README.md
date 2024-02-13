@@ -11,7 +11,7 @@ CollagePDFMaker is a desktop application designed to create PDF documents from i
 
 ## Getting Started
 ### Download Executable
-For ease of use, pre-built executables for Windows, macOS, and Linux are available in the [Releases](https://github.com/yourusername/CollagePDFMaker/releases) section of this repository. Download the version appropriate for your operating system.
+For ease of use, pre-built executables for Windows, macOS, and Linux are available in the [Releases](https://github.com/bronweg/CollagePDFMaker/releases) section of this repository. Download the version appropriate for your operating system.
 
 ### Prerequisites
 Before you begin, ensure you have met the following requirements:
