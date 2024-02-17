@@ -1,10 +1,11 @@
 from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
 from reportlab.lib.pagesizes import A4
 from PIL import Image
 import math
 import bisect
+from time import time
 import os
+
 
 
 class VirtualImage:
@@ -13,10 +14,13 @@ class VirtualImage:
         self.width = width
         self.height = height
         self.rotated = rotated
+        print(f'TRACE: {self}')
     def __eq__(self, other):
         return (self.width == other.width) and (self.height == other.height)
     def __lt__(self, other):
         return (self.height < other.height) or ((self.height == other.height) and (self.width < other.width))
+    def __repr__(self):
+        return f'{str(self.width)}x{str(self.height)}({str(self.rotated)})'
 
 class VirtualPlacement:
     def __init__(self, image, x, y):
@@ -45,6 +49,11 @@ class VirtualCanvas:
         real = canvas.Canvas(output_pdf_path, pagesize=A4)
         done = 0
         placed_progress = 0
+        if not self.canvas[-1]:
+            self.canvas.pop()
+        start_time = time()
+        real.saveState()
+        print(f'TRACE: placing {str(self.length) } images on {str(len(self.canvas))} pages')
         self.progress_callback(placed_progress, 'placement')
         for page in self.canvas:
             for placement in page:
@@ -52,6 +61,8 @@ class VirtualCanvas:
                 done = self.updateProgress(done)
             real.showPage()
         real.save()
+        duration = time() - start_time
+        print(f'TRACE: Overall placement duration = {str(duration)}')
 
     def updateProgress(self, done):
         done += 1
@@ -70,13 +81,22 @@ class VirtualCanvas:
 
     @staticmethod
     def drawRealRotated(real, placement):
-        with Image.open(placement.image.path) as be_rotated:
-            rotated = be_rotated.transpose(Image.ROTATE_90)
-            real.drawImage(ImageReader(rotated), placement.x, placement.y, width=placement.image.width, height=placement.image.height)
+        start_time = time()
+        real.saveState()
+        real.rotate(90)
+        #real.rect(y, -x-w, h, w, fill=0)
+        real.drawImage(placement.image.path, placement.y, -(placement.image.width+placement.x), placement.image.height, placement.image.width)
+        real.restoreState()
+        duration = time() - start_time
+        print(f'TRACE: drawRealRotated-placement duration = {str(duration)}')
 
     @staticmethod
     def drawRealDirect(real, placement):
+        start_time = time()
         real.drawImage(placement.image.path, placement.x, placement.y, width=placement.image.width, height=placement.image.height)
+        duration = time() - start_time
+        print(f'TRACE: drawRealDirect duration = {str(duration)}')
+
 
 class VirtualDocument:
     def __init__(self, margin):
@@ -183,7 +203,7 @@ def try_use_unused_bottom(virtual_canvas, bottom_unused, image, document, min_si
 def rotate(image):
     return VirtualImage(image.path, image.height, image.width, not image.rotated)
 
-def try_use_unused(virtual_canvas, right_unused, bottom_unused, image, document, min_size):
+def use_unused(virtual_canvas, right_unused, bottom_unused, image, document, min_size):
     return try_use_unused_right(
         virtual_canvas, right_unused, image, document, min_size
     ) or try_use_unused_bottom(
@@ -196,13 +216,15 @@ def try_use_unused(virtual_canvas, right_unused, bottom_unused, image, document,
 
 
 def reposition(virtual_canvas, position, right_unused, bottom_unused, image, document, min_size):
-
     if position.max_row_height == 0:
         position.max_row_height = image.height
     elif position.x + image.width > document.page_right:
         space = document.page_right-position.x
         if space >= min_size:
-            bisect.insort_right(right_unused, VirtualSpace(document.page_right-position.x, position.x, position.y, position.page), key = lambda vs:vs.space)
+            vs = VirtualSpace(document.page_right-position.x, position.x, position.y, position.page)
+            rooms = len(bottom_unused)
+            bisect.insort_right(right_unused, vs, key = lambda vs:vs.space)
+            print(f'TRACE: add HORIZONTAL virtual space {str(vs)}; current number of rooms: {str(rooms)} => {str(len(right_unused))}')
         position.x = document.margin
         position.y -= position.max_row_height + document.padding
         position.max_row_height = image.height
@@ -210,13 +232,20 @@ def reposition(virtual_canvas, position, right_unused, bottom_unused, image, doc
         if position.y - image.height < document.margin:
             space = position.y - document.margin
             if space >= min_size:
+                vs = VirtualSpace(position.y - document.margin, document.margin, position.y, position.page)
+                rooms = len(bottom_unused)
                 bisect.insort_right(bottom_unused,
-                                    VirtualSpace(position.y - document.margin, document.margin, position.y, position.page),
+                                    vs,
                                     key = lambda vs:vs.space)
+                print(f'TRACE: add VERTICAL virtual space {str(vs)}; current number of rooms: {str(rooms)} => {str(len(bottom_unused))}')
             virtual_canvas.showPage()
             position.page += 1
             position.x, position.y = document.margin, document.page_height - document.margin
 
+
+def draw_image(virtual_canvas, position, image, document):
+    virtual_canvas.drawImage(image, position.x, position.y - image.height)
+    position.x += image.width + document.padding
 
 def default_progress_callback(value, label=None):
     if label:
@@ -227,17 +256,18 @@ def default_progress_callback(value, label=None):
         print('-', end = '')
     print()
 
+
 def updateProgress(done, total, progress_callback):
+    done += 1
     calculated_progress = math.floor((done / total)*100)
     print(f'CALCULATION IS DONE for {str(calculated_progress)}%: {str(done)} of {str(total)}')
     progress_callback(calculated_progress)
-    return done + 1
+    return done
+
 
 def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_callback=default_progress_callback):
     virtual_canvas = VirtualCanvas(progress_callback)
-
     document = VirtualDocument(margin)
-
     position = VirtualPosition(document.margin, document.page_height - document.margin, 0, 0)
 
     right_unused = []
@@ -249,28 +279,31 @@ def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_call
     progress_callback(calculated_progress, 'calculation')
 
     for image in images:
+        reposition(virtual_canvas, position, right_unused, bottom_unused, image, document, min_size)
+        if not use_unused(virtual_canvas, right_unused, bottom_unused, image, document, min_size):
+            draw_image(virtual_canvas, position, image, document)
+
         done = updateProgress(done, total, progress_callback)
 
-        if try_use_unused(virtual_canvas, right_unused, bottom_unused, image, document, min_size):
-            continue
-
-        reposition(virtual_canvas, position, right_unused, bottom_unused, image, document, min_size)
-
-        virtual_canvas.drawImage(image, position.x, position.y - image.height)
-        position.x += image.width + document.padding
-
-    updateProgress(done, total, progress_callback)
 
     virtual_canvas.makeItReal(output_pdf_path)
-    print(f'\n\nStill right unused\n {str(right_unused)}')
-    print(f'\n\nStill bottom unused\n {str(right_unused)}')
+    print(f'\n\nRight still unused\n {str(right_unused)}')
+    print(f'\n\nBottom still bottom unused\n {str(bottom_unused)}')
     print()
 
 
+
 if __name__ == "__main__":
-    directory = "/Users/betty/PythonProjects/image_resize/photos"
-    max_width_cm, max_height_cm = 5, 10
-    output_pdf_path = "/Users/betty/PythonProjects/image_resize/output_images_direction.pdf"
+    #directory = "/Users/betty/PythonProjects/image_resize/photos"
+    directory = "/Users/betty/PythonProjects/image_resize/bat-mizvush-all"
+    #directory = "/Users/betty/PythonProjects/image_resize/bat-mizvush-6"
+    max_width_cm, max_height_cm = 10, 15.5
+    # output_pdf_path = "/Users/betty/PythonProjects/image_resize/output_images.pdf"
+    output_pdf_path = "/Users/betty/PythonProjects/image_resize/output_images.pdf"
+    start_time = time()
     images, min_size = collect_and_resize_images(directory, max_width_cm, max_height_cm)
     place_images_on_pdf(images, output_pdf_path, cm_to_points(0.2), min_size)
+    #rotate_fun(output_pdf_path)
     print(f"PDF document '{output_pdf_path}' has been created with images.")
+    duration = time() - start_time
+    print(f'TRACE: overall duration = {str(duration)}')
