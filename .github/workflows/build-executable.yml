@@ -19,10 +19,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@latest
+      - uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@latest
+        uses: actions/setup-python@v3
         with:
           python-version: '3.10'
 
@@ -70,7 +70,7 @@ jobs:
         shell: bash
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@latest
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.os }}-executable
           path: dist/
