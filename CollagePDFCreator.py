@@ -263,3 +263,4 @@ if __name__ == "__main__":
     window = ImageToPDFConverter()
     window.show()
     sys.exit(app.exec())
+
