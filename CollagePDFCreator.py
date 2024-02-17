@@ -43,7 +43,6 @@ class PDFCreatorThread(QThread):
     def updateProgress(self, value, label=None):
         self.progressUpdated.emit(value, label)
 
-
 class ImageToPDFConverter(QWidget):
     def __init__(self):
         super().__init__()
