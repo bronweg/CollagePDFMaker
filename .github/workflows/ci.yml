@@ -21,6 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install Requirements
+        uses: ./.github/actions/install-requirements
+
       - name: Prepare Icons
         uses: ./.github/actions/prepare-icons
 
