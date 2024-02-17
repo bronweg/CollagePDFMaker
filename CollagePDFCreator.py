@@ -46,7 +46,6 @@ class PDFCreatorThread(QThread):
 class ImageToPDFConverter(QWidget):
     def __init__(self):
         super().__init__()
-
         settings = self.loadSettings()
         self.setLanguage(settings)
         self.translations = load_translations(self.currentLanguage)
