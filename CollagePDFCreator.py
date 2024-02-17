@@ -175,7 +175,7 @@ class ImageToPDFConverter(QWidget):
     def loadSettings(self):
         default_settings = {
             'language': 'English',
-            'directory': '',
+            'directory': os.path.expanduser("~"),
             'outputPath': '',
             'maxWidth': '',
             'maxHeight': ''

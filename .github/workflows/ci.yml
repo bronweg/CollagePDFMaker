@@ -1,0 +1,36 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.py'
+      - 'images/**'
+      - '.github/actions/**'
+      - 'requirements.txt'
+
+#on: [workflow_dispatch]
+
+jobs:
+  build-and-release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Prepare Icons
+        uses: ./.github/actions/prepare-icons
+
+      - name: Build Application
+        uses: ./.github/actions/build-app
+        with:
+          python-version: '3.10'
+
+      - name: Upload Artifacts
+        uses: ./.github/actions/upload-artifacts
+        with:
+          artifact-name: '${{ matrix.os }}-executable'
+          artifact-path: dist/*

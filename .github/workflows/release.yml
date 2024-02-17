@@ -1,0 +1,30 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Prepare Icons
+        uses: ./.github/actions/prepare-icons
+
+      - name: Build Application
+        uses: ./.github/actions/build-app
+        with:
+          python-version: '3.10'
+
+      - name: Create Release
+        uses: ./.github/actions/create-release
+        with:
+          tag-name: ${{ github.ref_name }}
+          release-name: Release ${{ github.ref_name }}
+          body: 'New release ${{ github.ref_name }}'

@@ -1,0 +1,26 @@
+name: 'Create Release'
+description: 'Create a GitHub release'
+runs:
+  using: 'composite'
+  steps:
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ inputs.tag-name }}
+        release_name: ${{ inputs.release-name }}
+        body: ${{ inputs.body }}
+        draft: false
+        prerelease: false
+
+inputs:
+  tag-name:
+    description: 'Tag name for the release'
+    required: true
+  release-name:
+    description: 'Name of the release'
+    required: true
+  body:
+    description: 'The body text of the release notes'
+    required: false
