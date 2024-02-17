@@ -57,6 +57,12 @@ class ImageToPDFConverter(QWidget):
         self.langComboBox.setCurrentText(self.currentLanguage)
         self.changeLanguage(self.currentLanguage)
 
+    @staticmethod
+    def getSettingsFile():
+        home_dir = os.path.expanduser("~")
+        filename = "settings.json"
+        return os.path.join(home_dir, filename)
+
     def setupUI(self):
         # Update Logo
         self.logoLabel = QLabel(self)
@@ -160,8 +166,11 @@ class ImageToPDFConverter(QWidget):
         'maxWidth': maxWidth,
         'maxHeight': maxHeight
         }
-        with open('settings.json', 'w') as f:
-            json.dump(settings, f)
+        try:
+            with open(self.getSettingsFile(), 'w') as f:
+                json.dump(settings, f)
+        except Exception as e:
+            QMessageBox.warning(self, self.tr("Something went wrong while saving settings"), str(e))
 
     def loadSettings(self):
         default_settings = {
@@ -172,7 +181,7 @@ class ImageToPDFConverter(QWidget):
             'maxHeight': ''
         }
         try:
-            with open('settings.json', 'r') as f:
+            with open(self.getSettingsFile(), 'r') as f:
                 settings = json.load(f)
         except FileNotFoundError:
             settings = default_settings

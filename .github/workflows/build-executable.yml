@@ -53,7 +53,7 @@ jobs:
 
       - name: Build executable
         run: |
-          export data_string=(images:images locales:locales settings.json:settings.json)
+          export data_string=(images:images locales:locales)
           if [ "${{ runner.os }}" == "Windows" ]; then
             icon_ext="ico"
             data_string=(${data_string[@]//:/\;})
@@ -66,7 +66,6 @@ jobs:
           --icon=images/logo.$icon_ext \
           --add-data ${data_string[0]} \
           --add-data ${data_string[1]} \
-          --add-data ${data_string[2]} \
           CollagePDFCreator.py
         shell: bash
 
