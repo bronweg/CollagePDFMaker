@@ -19,10 +19,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@latest
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@latest
         with:
           python-version: '3.10'
 
@@ -65,10 +65,12 @@ jobs:
           fi
           pyinstaller --onefile --windowed --icon=images/logo.$icon_ext --add-data ${data_string[0]} --add-data ${data_string[1]} CollagePDFCreator.py
           ls -lR
+          python -V
+          cat CollagePDFCreator.spec
         shell: bash
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@latest
         with:
           name: ${{ matrix.os }}-executable
           path: dist/
