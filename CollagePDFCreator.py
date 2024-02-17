@@ -258,6 +258,8 @@ class ImageToPDFConverter(QWidget):
         return self.translations.get(text_key, text_key)
 
 if __name__ == "__main__":
+    if hasattr(sys, '_MEIPASS'):
+        os.chdir(sys._MEIPASS)
     app = QApplication(sys.argv)
     window = ImageToPDFConverter()
     window.show()

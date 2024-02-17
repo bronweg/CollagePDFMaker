@@ -53,15 +53,7 @@ jobs:
 
       - name: Build executable
         run: |
-          data_string=""
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            data_string="images/logo.ico;images/"
-          elif [ "${{ runner.os }}" == "macOS" ]; then
-            data_string="images/logo.icns:images/"
-          else
-            data_string="images/logo.png:images/"
-          fi
-          pyinstaller --windowed --icon=images/logo.$([[ "${{ runner.os }}" == "Windows" ]] && echo "ico" || echo "png") --add-data "$data_string" --add-data "locales/:locales/" CollagePDFCreator.py
+          pyinstaller --onefile --windowed --icon=images/logo.$([[ "${{ runner.os }}" == "Windows" ]] && echo "ico" || [[ "${{ runner.os }}" == "macOS" ]] && echo "icns" || echo "png") --add-data "images:images" --add-data "locales:locales" CollagePDFCreator.py
         shell: bash
 
       - name: Upload Artifacts
