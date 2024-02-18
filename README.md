@@ -40,7 +40,7 @@ pip install -r requirements.txt
 ### Running the Application
 To run CollagePDFMaker, execute the following command from the root of the repository:
 ```bash
-python CollagePDFCreator.py
+python CollagePDFMaker.py
 ```
 
 

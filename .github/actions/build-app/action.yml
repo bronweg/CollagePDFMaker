@@ -32,5 +32,5 @@ runs:
           --icon=images/logo.$icon_ext \
           --add-data ${data_string[0]} \
           --add-data ${data_string[1]} \
-          CollagePDFCreator.py
+          CollagePDFMaker.py
       shell: bash

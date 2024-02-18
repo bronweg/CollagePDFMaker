@@ -60,7 +60,7 @@ class ImageToPDFConverter(QWidget):
     @staticmethod
     def getSettingsFile():
         home_dir = os.path.expanduser("~")
-        filename = "settings.json"
+        filename = "CollagePDFMaker.json"
         return os.path.join(home_dir, filename)
 
     def setupUI(self):

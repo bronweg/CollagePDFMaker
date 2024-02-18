@@ -28,6 +28,7 @@ jobs:
       - name: Create Release
         uses: ./.github/actions/create-release
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           tag-name: ${{ github.ref_name }}
           release-name: Release ${{ github.ref_name }}
           body: 'New release ${{ github.ref_name }}'
