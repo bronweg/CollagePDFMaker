@@ -43,7 +43,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Restore cached artifacts
-        id: 'cached-artifacts-${{ github.sha }}'
+        id: 'cached-artifacts-${{ env.GITHUB_SHA }}'
         uses: actions/cache/restore@v4
         with:
           path: dist/*
