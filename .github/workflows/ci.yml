@@ -35,7 +35,7 @@ jobs:
       - name: Upload Artifacts
         uses: ./.github/actions/upload-artifacts
         with:
-          artifact-name: '${{ matrix.os }}-executable'
+          artifact-name: '${{ runner.os }}-executable'
           artifact-path: dist/*
 
       - name: Save cache artifacts
@@ -43,4 +43,4 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: dist/*
-          key: '${{ matrix.os }}-executable-${{ github.sha }}'
+          key: '${{ runner.os }}-executable-${{ github.sha }}'
