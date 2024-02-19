@@ -13,7 +13,7 @@ on:
 #on: [workflow_dispatch]
 
 jobs:
-  build-and-release:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -37,3 +37,10 @@ jobs:
         with:
           artifact-name: '${{ matrix.os }}-executable'
           artifact-path: dist/*
+
+      - name: Save cache artifacts
+        id: 'cached-artifacts-${{ GITHUB_SHA }}'
+        uses: actions/cache@v4
+        with:
+          path: dist/*
+          key: '${{ matrix.os }}-executable'

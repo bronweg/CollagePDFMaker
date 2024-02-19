@@ -6,29 +6,53 @@ on:
       - 'v*'
 
 jobs:
-  release:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+  prepare-release:
+#    runs-on: ${{ matrix.os }}
+#    strategy:
+#      matrix:
+#        os: [ ubuntu-latest, windows-latest, macos-latest ]
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Install Requirements
+#        uses: ./.github/actions/install-requirements
+#
+#      - name: Prepare Icons
+#        uses: ./.github/actions/prepare-icons
+#
+#      - name: Build Application
+#        uses: ./.github/actions/build-app
+#        with:
+#          python-version: '3.10'
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Requirements
-        uses: ./.github/actions/install-requirements
-
-      - name: Prepare Icons
-        uses: ./.github/actions/prepare-icons
-
-      - name: Build Application
-        uses: ./.github/actions/build-app
-        with:
-          python-version: '3.10'
-
       - name: Create Release
+        id: create_release
         uses: ./.github/actions/create-release
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           tag-name: ${{ github.ref_name }}
           release-name: Release ${{ github.ref_name }}
           body: 'New release ${{ github.ref_name }}'
+
+  upload-release:
+    needs: prepare-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Restore cached artifacts
+        id: 'cached-artifacts-${{ GITHUB_SHA }}'
+        uses: actions/cache/restore@v4
+        with:
+          path: dist/*
+          key: '${{ runner.os }}-executable'
+
+      - name: Upload Release Artifacts
+        uses: ./.github/actions/upload-release-artifacts
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          upload-url: ${{ steps.create_release.outputs.upload_url }}
+          artifact-name: '${{ runner.os }}-executable'
+          artifact-path: dist/*
