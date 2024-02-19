@@ -39,7 +39,7 @@ jobs:
           artifact-path: dist/*
 
       - name: Save cache artifacts
-        id: 'cached-artifacts-${{ GITHUB_SHA }}'
+        id: 'cached-artifacts-${{ github.sha }}'
         uses: actions/cache@v4
         with:
           path: dist/*
