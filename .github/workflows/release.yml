@@ -43,11 +43,11 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Restore cached artifacts
-        id: 'cached-artifacts-${{ env.GITHUB_SHA }}'
+        id: 'cached-artifacts'
         uses: actions/cache/restore@v4
         with:
           path: dist/*
-          key: '${{ runner.os }}-executable'
+          key: '${{ runner.os }}-executable-${{ github.sha }}'
 
       - name: Upload Release Artifacts
         uses: ./.github/actions/upload-release-artifacts

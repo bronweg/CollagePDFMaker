@@ -39,8 +39,8 @@ jobs:
           artifact-path: dist/*
 
       - name: Save cache artifacts
-        id: "cached-artifacts-${{ github.sha }}"
+        id: "cached-artifacts"
         uses: actions/cache@v4
         with:
           path: dist/*
-          key: '${{ matrix.os }}-executable'
+          key: '${{ matrix.os }}-executable-${{ github.sha }}'
