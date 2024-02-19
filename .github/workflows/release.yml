@@ -7,23 +7,6 @@ on:
 
 jobs:
   prepare-release:
-#    runs-on: ${{ matrix.os }}
-#    strategy:
-#      matrix:
-#        os: [ ubuntu-latest, windows-latest, macos-latest ]
-#    steps:
-#      - uses: actions/checkout@v4
-#
-#      - name: Install Requirements
-#        uses: ./.github/actions/install-requirements
-#
-#      - name: Prepare Icons
-#        uses: ./.github/actions/prepare-icons
-#
-#      - name: Build Application
-#        uses: ./.github/actions/build-app
-#        with:
-#          python-version: '3.10'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -57,6 +40,6 @@ jobs:
         uses: ./.github/actions/upload-release-artifacts
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          upload-url: ${{ steps.create_release.outputs.upload_url }}
+          upload-url: ${{ needs.prepare-release.steps.create_release.outputs.upload_url }}
           artifact-name: '${{ runner.os }}-executable'
           artifact-path: dist/*
