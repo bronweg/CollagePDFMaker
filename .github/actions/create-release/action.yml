@@ -8,7 +8,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         GH_TOKEN: ${{ inputs.GH_TOKEN }}
       run: |
-        gh release create -t "${{ inputs.title }}" "$(date +%Y%m%d%H%M%S)" --draft --generate-notes
+        gh release create -t "${{ inputs.title }}" "$(date +%Y%m%d%H%M%S)" --generate-notes
         sleep 5
       shell: bash
 
