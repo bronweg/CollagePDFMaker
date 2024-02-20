@@ -42,6 +42,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          echo "LS:"
           ls -la dist/
+          echo "REF_NAME:"
+          echo ${{ github.ref_name }}
           gh release upload ${{ github.ref_name }} dist/*
         shell: bash
