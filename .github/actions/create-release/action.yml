@@ -4,26 +4,16 @@ runs:
   using: 'composite'
   steps:
     - name: Create Release
-      uses: actions/create-release@v2
+      uses: elgohr/Github-Release-Action@v5
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
       with:
-        tag_name: ${{ inputs.tag-name }}
-        release_name: ${{ inputs.release-name }}
-        body: ${{ inputs.body }}
-        draft: false
-        prerelease: false
+        title: ${{ inputs.title }}
 
 inputs:
   github-token:
     description: 'GitHub Token for authentication'
     required: true
-  tag-name:
-    description: 'Tag name for the release'
+  title:
+    description: 'Title of the release'
     required: true
-  release-name:
-    description: 'Name of the release'
-    required: true
-  body:
-    description: 'The body text of the release notes'
-    required: false
