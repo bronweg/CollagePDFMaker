@@ -18,7 +18,7 @@ jobs:
         uses: ./.github/actions/create-release
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          github-token: ${{ secrets.RELEASE_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           title: ${{ github.ref_name }}
 
   upload-release:
@@ -39,7 +39,7 @@ jobs:
 
       - name: Upload Release Artifacts
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "LS:"
@@ -47,6 +47,5 @@ jobs:
           echo "REF_NAME:"
           echo ${{ github.ref_name }}
           gh release list
-          gh release view ${{ github.ref_name }}
           gh release upload ${{ github.ref_name }} dist/*
         shell: bash
