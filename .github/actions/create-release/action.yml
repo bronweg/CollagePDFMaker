@@ -8,14 +8,17 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         GH_TOKEN: ${{ inputs.GH_TOKEN }}
       run: |
-        gh release create -t "${{ inputs.title }}" "$(date +%Y%m%d%H%M%S)" --verify-tag  --generate-notes
+        gh release create -t "${{ inputs.release-title }}" ${{ inputs.release-tag }} --verify-tag  --generate-notes
       shell: bash
 
 inputs:
   github-token:
     description: 'GitHub Token for authentication'
     required: true
-  title:
+  release-tag:
+    description: "Tag to create release from"
+    required: true
+  release-title:
     description: 'Title of the release'
     required: true
   GH_TOKEN:

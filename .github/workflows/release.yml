@@ -19,7 +19,8 @@ jobs:
         with:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          title: ${{ github.ref_name }}
+          release-title: ${{ github.ref_name }}
+          release-tag: ${{ github.ref_name }}
 
   upload-release:
     needs: prepare-release
