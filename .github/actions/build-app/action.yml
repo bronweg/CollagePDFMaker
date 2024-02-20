@@ -35,3 +35,10 @@ runs:
           --name ${{ runner.os }}-CollagePDFMaker \
           CollagePDFMaker.py
       shell: bash
+
+    - name: Compress mac executable as a single file
+      run: |
+          if [[ ${{ runner.os }} == macOs ]]; then
+            tar -czvf ${{ runner.os }}-CollagePDFMaker.tgz dist/*
+          fi
+      shell: bash
