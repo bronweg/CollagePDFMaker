@@ -32,13 +32,6 @@ runs:
           --icon=images/logo.$icon_ext \
           --add-data ${data_string[0]} \
           --add-data ${data_string[1]} \
-          --name ${{ runner.os }}-CollagePDFMaker \
-          CollagePDFMaker.py
-      shell: bash
-
-    - name: Compress mac executable as a single file
-      run: |
-          if [[ ${{ runner.os }} == macOs ]]; then
-            tar -czvf ${{ runner.os }}-CollagePDFMaker.tgz dist/*
-          fi
+          --name ${{ runner.os }}-${{ github.event.repository.name }} \
+          ${{ github.event.repository.name }}.py
       shell: bash
