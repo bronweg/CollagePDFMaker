@@ -52,10 +52,12 @@ class ImageToPDFConverter(QWidget):
         filename = "CollagePDFMaker.json"
         return os.path.join(home_dir, filename)
 
-
     def save_settings(self, language, maxWidth="", maxHeight="", margin=""):
         settings = {
             'language': language,
+            'projectPath': self.project_path,
+            'projectFolder': self.project_folder,
+            'imagesFolder': self.images_folder,
             'maxWidth': maxWidth,
             'maxHeight': maxHeight,
             'margin': margin
