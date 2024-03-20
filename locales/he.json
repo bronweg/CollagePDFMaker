@@ -1,5 +1,8 @@
 {
   "title": "המרת תמונות ל-PDF",
+  "language_label": "שפה:",
+  "project_label": "הפרויקט הנוכחי:",
+  "choose_project": "נתיב לפרויקט:",
   "directory_label": "תיקייה עם תמונות:",
   "output_label": "נתיב לקובץ PDF:",
   "max_width": "רוחב מקסימלי לתמונה (ס\"מ):",
@@ -8,6 +11,7 @@
   "process_button": "עבד תמונות",
   "choose_directory": "בחר...",
   "choose_output": "בחר...",
+  "success_title": "התהליך הסתיים",
   "success_message": "ה-PDF נוצר בהצלחה!",
   "error_title": "שגיאה",
   "pdf_creation_failed": "נכשל ביצירת PDF.",

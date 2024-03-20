@@ -1,5 +1,8 @@
 {
   "title": "Конвертер изображений в PDF",
+  "language_label": "Язык:",
+  "project_label": "Текущий проект:",
+  "choose_project": "Путь к проекту:",
   "directory_label": "Папка с изображениями:",
   "output_label": "Путь для сохранения PDF:",
   "max_width": "Максимальная ширина изображения (см):",
@@ -8,6 +11,7 @@
   "process_button": "Создать PDF",
   "choose_directory": "Выбрать...",
   "choose_output": "Выбрать...",
+  "success_title": "Процесс завершен",
   "success_message": "PDF успешно создан!",
   "error_title": "Ошибка",
   "pdf_creation_failed": "Не удалось создать PDF.",
