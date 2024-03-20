@@ -94,6 +94,7 @@ class ImageToPDFConverter(QWidget):
         return datetime.datetime.now().strftime('%Y-%m-%d')
 
     def apply_settings(self, settings):
+        self.langComboBox.setCurrentText(self.current_language)
         self.maxWidthLineEdit.setText(settings.get('maxWidth', ''))
         self.maxHeightLineEdit.setText(settings.get('maxHeight', ''))
         self.marginLineEdit.setText(settings.get('margin', ''))
