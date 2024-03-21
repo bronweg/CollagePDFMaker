@@ -2,7 +2,7 @@
   "title": "Images to PDF Converter",
   "language_label": "Language:",
   "project_label": "Current project:",
-  "choose_project": "Project Path:",
+  "choose_project": "Choose project...",
   "directory_label": "Directory with Images:",
   "output_label": "Output PDF Path:",
   "max_width": "Max Image Width (cm):",

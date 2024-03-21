@@ -2,7 +2,7 @@
   "title": "Конвертер изображений в PDF",
   "language_label": "Язык:",
   "project_label": "Текущий проект:",
-  "choose_project": "Путь к проекту:",
+  "choose_project": "Выбрать проект...",
   "directory_label": "Папка с изображениями:",
   "output_label": "Путь для сохранения PDF:",
   "max_width": "Максимальная ширина изображения (см):",
