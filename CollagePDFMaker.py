@@ -6,7 +6,7 @@ import placement
 from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
                                QLineEdit, QFileDialog, QComboBox, QMessageBox, QProgressBar)
 from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtGui import (QIcon, QPixmap)
+from PySide6.QtGui import QPixmap
 
 
 class PDFCreatorThread(QThread):
@@ -29,6 +29,7 @@ class PDFCreatorThread(QThread):
     def updateProgress(self, value, label=None):
         self.progressUpdated.emit(value, label)
 
+
 class ImageToPDFConverter(QWidget):
     def __init__(self):
         super().__init__()
@@ -37,10 +38,24 @@ class ImageToPDFConverter(QWidget):
         self.translations = self.load_translations(self.current_language)
         self.project_path, self.project_folder = self.get_project_path(settings)
         self.images_folder = self.get_images_folder(settings)
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
+
+        # declare QComponent groups
         self.locale_subjects = dict()
         self.direction_subjects = list()
+
+        # declare QComponents
+        self.langComboBox = None
+        self.projLineEdit = None
+        self.dirLineEdit = None
+        self.fileLineEdit = None
+        self.maxWidthLineEdit = None
+        self.maxHeightLineEdit = None
+        self.marginLineEdit = None
+        self.processButton = None
+        self.progressLabel = None
+        self.progressStatus = None
+        self.progressBar = None
+
         self.setup_ui()
         self.apply_settings(settings)
         self.change_language(self.current_language)
@@ -133,103 +148,123 @@ class ImageToPDFConverter(QWidget):
 
 
     def setup_ui(self):
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
         # Update Logo
-        self.logoLabel = QLabel(self)
-        self.logoPixmap = QPixmap("images/logo.png")
-        scaledLogoPixmap = self.logoPixmap.scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.logoLabel.setPixmap(scaledLogoPixmap)
-        self.logoLabel.setFixedSize(scaledLogoPixmap.size())
-        self.layout.addWidget(self.logoLabel)
+        logoLabel = QLabel(self)
+        logoPixmap = QPixmap("images/logo.png")
+        scaledLogoPixmap = logoPixmap.scaled(100, 100, Qt.AspectRatioMode.KeepAspectRatio,
+                                                  Qt.TransformationMode.SmoothTransformation)
+        logoLabel.setPixmap(scaledLogoPixmap)
+        logoLabel.setFixedSize(scaledLogoPixmap.size())
+        layout.addWidget(logoLabel)
 
         # Language selection
-        self.languageLabel = QLabel()
-        self.locale_subjects['language_label'] = self.languageLabel
-        self.langComboBox = QComboBox()
-        language_names = self.load_language_names()
-        self.langComboBox.addItems(language_names)
-        self.langComboBox.currentTextChanged.connect(self.change_language)
+        languageLabel = QLabel()
+        langComboBox = QComboBox()
+        langComboBox.addItems(self.load_language_names())
+        langComboBox.currentTextChanged.connect(self.change_language)
         langLayout = QHBoxLayout()
-        langLayout.addWidget(self.languageLabel)
-        langLayout.addWidget(self.langComboBox)
-        self.direction_subjects.append(langLayout)
-        self.layout.addLayout(langLayout)
+        langLayout.addWidget(languageLabel)
+        langLayout.addWidget(langComboBox)
+        layout.addLayout(langLayout)
 
         # Project selection
-        self.projLabel = QLabel()
-        self.locale_subjects['project_label'] = self.projLabel
-        self.projLineEdit = QLineEdit()
-        self.projButton = QPushButton()
-        self.locale_subjects['choose_project'] = self.projButton
-        self.projButton.clicked.connect(self.choose_project)
-        self.projLayout = QHBoxLayout()
-        self.projLayout.addWidget(self.projLabel)
-        self.projLayout.addWidget(self.projLineEdit)
-        self.projLayout.addWidget(self.projButton)
-        self.direction_subjects.append(self.projLayout)
-        self.layout.addLayout(self.projLayout)
+        projLabel = QLabel()
+        projLineEdit = QLineEdit()
+        projButton = QPushButton()
+        projButton.clicked.connect(self.choose_project)
+        projLayout = QHBoxLayout()
+        projLayout.addWidget(projLabel)
+        projLayout.addWidget(projLineEdit)
+        projLayout.addWidget(projButton)
+        layout.addLayout(projLayout)
 
         # Directory selection
-        self.dirLabel = QLabel()
-        self.locale_subjects['directory_label'] = self.dirLabel
-        self.dirLineEdit = QLineEdit()
-        self.dirLineEdit.setMinimumWidth(400)
-        self.dirButton = QPushButton()
-        self.locale_subjects['choose_directory'] = self.dirButton
-        self.dirButton.clicked.connect(self.choose_directory)
-        self.dirLayout = QHBoxLayout()
-        self.dirLayout.addWidget(self.dirLabel)
-        self.dirLayout.addWidget(self.dirLineEdit)
-        self.dirLayout.addWidget(self.dirButton)
-        self.direction_subjects.append(self.dirLayout)
-        self.layout.addLayout(self.dirLayout)
+        dirLabel = QLabel()
+        dirLineEdit = QLineEdit()
+        dirLineEdit.setMinimumWidth(400)
+        dirButton = QPushButton()
+        dirButton.clicked.connect(self.choose_directory)
+        dirLayout = QHBoxLayout()
+        dirLayout.addWidget(dirLabel)
+        dirLayout.addWidget(dirLineEdit)
+        dirLayout.addWidget(dirButton)
+        layout.addLayout(dirLayout)
 
         # Output file selection
-        self.fileLabel = QLabel()
-        self.locale_subjects['output_label'] = self.fileLabel
-        self.fileLineEdit = QLineEdit()
-        self.fileButton = QPushButton()
-        self.locale_subjects['choose_output'] = self.fileButton
-        self.fileButton.clicked.connect(self.choose_output_file)
-        self.fileLayout = QHBoxLayout()
-        self.fileLayout.addWidget(self.fileLabel)
-        self.fileLayout.addWidget(self.fileLineEdit)
-        self.fileLayout.addWidget(self.fileButton)
-        self.direction_subjects.append(self.fileLayout)
-        self.layout.addLayout(self.fileLayout)
+        fileLabel = QLabel()
+        fileLineEdit = QLineEdit()
+        fileButton = QPushButton()
+        fileButton.clicked.connect(self.choose_output_file)
+        fileLayout = QHBoxLayout()
+        fileLayout.addWidget(fileLabel)
+        fileLayout.addWidget(fileLineEdit)
+        fileLayout.addWidget(fileButton)
+        layout.addLayout(fileLayout)
 
         # Max width and height
-        self.maxWidthLabel = QLabel()
-        self.locale_subjects['max_width'] = self.maxWidthLabel
-        self.maxWidthLineEdit = QLineEdit()
-        self.maxHeightLabel = QLabel()
-        self.locale_subjects['max_height'] = self.maxHeightLabel
-        self.maxHeightLineEdit = QLineEdit()
-        self.layout.addWidget(self.maxWidthLabel)
-        self.layout.addWidget(self.maxWidthLineEdit)
-        self.layout.addWidget(self.maxHeightLabel)
-        self.layout.addWidget(self.maxHeightLineEdit)
+        maxWidthLabel = QLabel()
+        maxWidthLineEdit = QLineEdit()
+        maxHeightLabel = QLabel()
+        maxHeightLineEdit = QLineEdit()
+        layout.addWidget(maxWidthLabel)
+        layout.addWidget(maxWidthLineEdit)
+        layout.addWidget(maxHeightLabel)
+        layout.addWidget(maxHeightLineEdit)
 
         # Margin
-        self.marginLabel = QLabel()
-        self.locale_subjects['margin'] = self.marginLabel
-        self.marginLineEdit = QLineEdit()
-        self.layout.addWidget(self.marginLabel)
-        self.layout.addWidget(self.marginLineEdit)
+        marginLabel = QLabel()
+        marginLineEdit = QLineEdit()
+        layout.addWidget(marginLabel)
+        layout.addWidget(marginLineEdit)
 
         # Process button
-        self.processButton = QPushButton(self.translate_key("Process Images"))
-        self.locale_subjects['process_button'] = self.processButton
-        self.processButton.clicked.connect(self.process_images)
-        self.layout.addWidget(self.processButton)
+        processButton = QPushButton(self.translate_key("Process Images"))
+        processButton.clicked.connect(self.process_images)
+        layout.addWidget(processButton)
 
         # Progress Bar
-        self.progressLabel = QLabel("")
-        self.progressStatus = ''
-        self.layout.addWidget(self.progressLabel)
-        self.progressBar = QProgressBar(self)
-        self.progressBar.setMaximum(100)  # 100% completion
-        self.progressBar.setValue(0)  # start value
-        self.layout.addWidget(self.progressBar)
+        progressLabel = QLabel("")
+        progressStatus = ''
+        layout.addWidget(progressLabel)
+        progressBar = QProgressBar(self)
+        progressBar.setMaximum(100)  # 100% completion
+        progressBar.setValue(0)  # start value
+        layout.addWidget(progressBar)
+
+        self.locale_subjects['language_label'] = languageLabel
+        self.locale_subjects['project_label'] = projLabel
+        self.locale_subjects['choose_project'] = projButton
+        self.locale_subjects['directory_label'] = dirLabel
+        self.locale_subjects['choose_directory'] = dirButton
+        self.locale_subjects['output_label'] = fileLabel
+        self.locale_subjects['choose_output'] = fileButton
+        self.locale_subjects['max_width'] = maxWidthLabel
+        self.locale_subjects['max_height'] = maxHeightLabel
+        self.locale_subjects['margin'] = marginLabel
+        self.locale_subjects['process_button'] = processButton
+
+        self.direction_subjects.append(langLayout)
+        self.direction_subjects.append(projLayout)
+        self.direction_subjects.append(dirLayout)
+        self.direction_subjects.append(fileLayout)
+
+        self.langComboBox = langComboBox
+        self.projLineEdit = projLineEdit
+        self.dirLineEdit = dirLineEdit
+        self.fileLineEdit = fileLineEdit
+        self.maxWidthLineEdit = maxWidthLineEdit
+        self.maxHeightLineEdit = maxHeightLineEdit
+        self.marginLineEdit = marginLineEdit
+        self.processButton = processButton
+        self.progressLabel = progressLabel
+        self.progressStatus = progressStatus
+        self.progressBar = progressBar
+
+
+
 
     def reset_progress(self):
         self.progressLabel.setText('')
@@ -297,7 +332,7 @@ class ImageToPDFConverter(QWidget):
         # Update layout
         is_rtl = (language == 'עברית')
         for direction_subject in self.direction_subjects:
-            direction_subject.setDirection(QHBoxLayout.RightToLeft if is_rtl else QHBoxLayout.LeftToRight)
+            direction_subject.setDirection(QHBoxLayout.Direction.RightToLeft if is_rtl else QHBoxLayout.Direction.LeftToRight)
 
     def process_images(self):
         if not os.path.isdir(self.dirLineEdit.text()):
@@ -349,7 +384,8 @@ class ImageToPDFConverter(QWidget):
 
 
     def on_pdf_creation_finished(self):
-        QMessageBox.information(self, self.translate_key("success_title"), self.translate_key("success_message"))
+        QMessageBox.information(self, self.translate_key("success_title"), self.translate_key("success_message"),
+                                QMessageBox.StandardButton.Ok)
         self.progressLabel.setText(self.translate_key("finished"))
         self.processButton.setEnabled(True)
 
