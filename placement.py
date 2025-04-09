@@ -156,8 +156,12 @@ def resize_image(image_path, max_width_points, max_height_points):
         return None
 
 def collect_and_resize_images(directory, max_width_cm, max_height_cm):
-    max_width_points = cm_to_points(max_width_cm)
-    max_height_points = cm_to_points(max_height_cm)
+    if max_width_cm <= max_height_cm:
+        max_width_points = cm_to_points(max_width_cm)
+        max_height_points = cm_to_points(max_height_cm)
+    else:
+        max_width_points = cm_to_points(max_height_cm)
+        max_height_points = cm_to_points(max_width_cm)
     images = []
     min_size = min(max_width_points, max_height_points)
     for root, _, files in os.walk(directory):
