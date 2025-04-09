@@ -1,10 +1,14 @@
+import logging
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import math
 import bisect
 from time import time
 import os
+
+logger = logging.getLogger(__name__)
+
 
 
 
@@ -127,26 +131,29 @@ def cm_to_points(cm):
     return inches * 72
 
 def resize_image(image_path, max_width_points, max_height_points):
-    with Image.open(image_path) as img:
+    try:
+        with Image.open(image_path) as img:
+            rotated = False
+            width = img.width
+            height = img.height
 
-        rotated = False
-        width = img.width
-        height = img.height
+            if (width - height) * (max_width_points - max_height_points) < 0:
+                rotated = True
+                width = img.height
+                height = img.width
 
-        if (width - height) * (max_width_points - max_height_points) < 0:
-            rotated = True
-            width = img.height
-            height = img.width
+            img_ratio = width / height
+            if img_ratio > max_width_points / max_height_points:
+                new_width = min(width, max_width_points)
+                new_height = int(new_width / img_ratio)
+            else:
+                new_height = min(height, max_height_points)
+                new_width = int(new_height * img_ratio)
 
-        img_ratio = width / height
-        if img_ratio > max_width_points / max_height_points:
-            new_width = min(width, max_width_points)
-            new_height = int(new_width / img_ratio)
-        else:
-            new_height = min(height, max_height_points)
-            new_width = int(new_height * img_ratio)
-
-        return VirtualImage(image_path, new_width, new_height, rotated)
+            return VirtualImage(image_path, new_width, new_height, rotated)
+    except UnidentifiedImageError:
+        logger.warning(f'The file {image_path} could not be identified as an image.')
+        return None
 
 def collect_and_resize_images(directory, max_width_cm, max_height_cm):
     max_width_points = cm_to_points(max_width_cm)
@@ -155,11 +162,11 @@ def collect_and_resize_images(directory, max_width_cm, max_height_cm):
     min_size = min(max_width_points, max_height_points)
     for root, _, files in os.walk(directory):
         for filename in files:
-            if filename.lower().endswith(('png', 'jpg', 'jpeg', 'gif', 'bmp')):
                 path = os.path.join(root, filename)
                 image = resize_image(path, max_width_points, max_height_points)
-                min_size = min(min_size, image.width, image.height)
-                images.append(image)
+                if image is not None:
+                    min_size = min(min_size, image.width, image.height)
+                    images.append(image)
     images.sort(reverse=True)
     return images, min_size
 
@@ -294,12 +301,10 @@ def place_images_on_pdf(images, output_pdf_path, margin, min_size, progress_call
 
 
 if __name__ == "__main__":
-    #directory = "/Users/betty/PythonProjects/image_resize/photos"
-    directory = "/Users/betty/PythonProjects/image_resize/bat-mizvush-all"
-    #directory = "/Users/betty/PythonProjects/image_resize/bat-mizvush-6"
+    directory = "/Users/betty/projects/2025-03-25/vetochka/images"
     max_width_cm, max_height_cm = 10, 15.5
     # output_pdf_path = "/Users/betty/PythonProjects/image_resize/output_images.pdf"
-    output_pdf_path = "/Users/betty/PythonProjects/image_resize/output_images.pdf"
+    output_pdf_path = "/Users/betty/projects/2025-03-25/vetochka/images/output_imagess.pdf"
     start_time = time()
     images, min_size = collect_and_resize_images(directory, max_width_cm, max_height_cm)
     place_images_on_pdf(images, output_pdf_path, cm_to_points(0.2), min_size)
