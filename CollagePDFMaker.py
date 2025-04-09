@@ -1,12 +1,21 @@
+from talelle_setup import Path, TALELLE_DIR, config_log
+TALELLE_TOOL = Path(__file__).stem
+config_log(TALELLE_TOOL)
+
 import sys
 import os
 import json
 import datetime
 import placement
+
+import logging
 from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
                                QLineEdit, QFileDialog, QComboBox, QMessageBox, QProgressBar)
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QPixmap
+
+logger = logging.getLogger(__name__)
+logger.info(f'{TALELLE_TOOL} started')
 
 
 class PDFCreatorThread(QThread):
@@ -63,9 +72,7 @@ class ImageToPDFConverter(QWidget):
 
     @staticmethod
     def get_settings_file():
-        home_dir = os.path.expanduser("~")
-        filename = "CollagePDFMaker.json"
-        return os.path.join(home_dir, filename)
+        return os.path.join(TALELLE_DIR, f'{TALELLE_TOOL}.json')
 
     def save_settings(self, language, maxWidth="", maxHeight="", margin=""):
         settings = {
