@@ -175,6 +175,7 @@ def resize_image(image_path: str, max_width_points: float, max_height_points: fl
 
 def collect_and_resize_images(directory: str, max_width_cm: float, max_height_cm: float
                               ) -> tuple[list[VirtualImage], float]:
+    logger.info('Collecting and resizing images')
     if max_width_cm <= max_height_cm:
         max_width_points = cm_to_points(max_width_cm)
         max_height_points = cm_to_points(max_height_cm)
@@ -334,6 +335,8 @@ def updateProgress(done: int, total: int, progress_callback: Callable):
 def place_images_on_pdf(images: list[VirtualImage], output_pdf_path: str,
                         margin: float, min_size: float,
                         progress_callback: Callable[[int, Optional[str]], None] = default_progress_callback):
+
+    logger.info(f'Starting placement of {len(images)} images')
 
     virtual_canvas = VirtualCanvas(progress_callback)
     document = VirtualDocument(margin)
