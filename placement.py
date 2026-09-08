@@ -1,10 +1,10 @@
 import logging
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
 from typing import Optional
 
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape
 from PIL import Image, UnidentifiedImageError
 import math
 import bisect
@@ -56,8 +56,8 @@ class VirtualCanvas:
         self.canvas[page].append(VirtualPlacement(image, x, y))
         self.length += 1
 
-    def makeItReal(self, output_pdf_path: str):
-        real = canvas.Canvas(output_pdf_path, pagesize=A4)
+    def makeItReal(self, output_pdf_path: str, page_rotate: bool):
+        real = canvas.Canvas(output_pdf_path, pagesize=A4 if not page_rotate else landscape(A4))
         done = 0
         placed_progress = 0
         if not self.canvas[-1]:
@@ -113,13 +113,15 @@ class VirtualCanvas:
 @dataclass
 class VirtualDocument:
     margin: float
+    page_rotate: InitVar[bool] = False
     padding: float = field(init=False)
-    page_width: float = A4[0]
-    page_height: float = A4[1]
+    page_width: float = field(init=False)
+    page_height: float = field(init=False)
     page_right: float = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self, page_rotate: bool):
         self.padding = self.margin
+        self.page_width, self.page_height = A4 if not page_rotate else landscape(A4)
         self.page_right = self.page_width - self.margin
 
 
@@ -334,12 +336,13 @@ def updateProgress(done: int, total: int, progress_callback: Callable):
 
 def place_images_on_pdf(images: list[VirtualImage], output_pdf_path: str,
                         margin: float, min_size: float,
+                        page_rotate: bool = False,
                         progress_callback: Callable[[int, Optional[str]], None] = default_progress_callback):
 
     logger.info(f'Starting placement of {len(images)} images')
 
     virtual_canvas = VirtualCanvas(progress_callback)
-    document = VirtualDocument(margin)
+    document = VirtualDocument(margin, page_rotate)
     position = VirtualPosition(document.margin, document.page_height - document.margin, 0, 0)
 
     right_unused = []
@@ -357,7 +360,7 @@ def place_images_on_pdf(images: list[VirtualImage], output_pdf_path: str,
 
         done = updateProgress(done, total, progress_callback)
 
-    virtual_canvas.makeItReal(output_pdf_path)
+    virtual_canvas.makeItReal(output_pdf_path, page_rotate)
     logger.info(f'Right still unused {right_unused}')
     logger.info(f'Bottom still bottom unused {bottom_unused}')
 
@@ -375,13 +378,14 @@ def config_default_logging():
 if __name__ == "__main__":
     config_default_logging()
     logger.info('STARTING PDF MAKER')
-    directory = "/Users/betty/projects/2025-03-25/vetochka/images"
-    max_width_cm, max_height_cm = 10, 15.5
+    directory = "/Users/betty/projects/2025-03-25/vetochka/two_images"
+    max_width_cm, max_height_cm = 20, 14
     # output_pdf_path = "/Users/betty/PythonProjects/image_resize/output_images.pdf"
-    output_pdf_path = "/Users/betty/projects/2025-03-25/vetochka/images/output_imagess.pdf"
+    # output_pdf_path = "/Users/betty/projects/2025-03-25/vetochka/output_imagess_landscape.pdf"
+    output_pdf_path = "/Users/betty/projects/2025-03-25/vetochka/output_imagess_portrait.pdf"
     start_time = time()
     images, min_size = collect_and_resize_images(directory, max_width_cm, max_height_cm)
-    place_images_on_pdf(images, output_pdf_path, cm_to_points(0.2), min_size)
+    place_images_on_pdf(images, output_pdf_path, cm_to_points(0.2), min_size, page_rotate=False)
     #rotate_fun(output_pdf_path)
     logger.info(f"PDF document '{output_pdf_path}' has been created with images.")
     duration = time() - start_time

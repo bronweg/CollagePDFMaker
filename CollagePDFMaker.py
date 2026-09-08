@@ -11,7 +11,7 @@ import placement
 import logging
 from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
                                QLineEdit, QFileDialog, QComboBox, QMessageBox, QProgressBar)
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import Qt, QThread, Signal, QSize
 from PySide6.QtGui import QPixmap
 
 logger = logging.getLogger(__name__)
@@ -23,16 +23,18 @@ class PDFCreatorThread(QThread):
     progressUpdated = Signal(int, str)
     creationFinished = Signal()
 
-    def __init__(self, images, output_pdf_path, margin, min_size):
+    def __init__(self, images, output_pdf_path, margin, min_size, page_rotate):
         super().__init__()
         self.images = images
         self.output_pdf_path = output_pdf_path
         self.margin = margin
         self.min_size = min_size
+        self.page_rotate = page_rotate
 
     def run(self):
         self.creationStarted.emit()
-        placement.place_images_on_pdf(self.images, self.output_pdf_path, self.margin, self.min_size, self.updateProgress)
+        placement.place_images_on_pdf(self.images, self.output_pdf_path, self.margin, self.min_size,
+                                      page_rotate=self.page_rotate, progress_callback=self.updateProgress)
         self.creationFinished.emit()
 
     def updateProgress(self, value, label=None):
@@ -47,6 +49,7 @@ class ImageToPDFConverter(QWidget):
         self.translations = self.load_translations(self.current_language)
         self.project_path, self.project_folder = self.get_project_path(settings)
         self.images_folder = self.get_images_folder(settings)
+        self.page_rotate = False  # Initialize the page_rotate attribute
 
         # declare QComponent groups
         self.locale_subjects = dict()
@@ -158,14 +161,23 @@ class ImageToPDFConverter(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        # Update Logo
+        # Update Logo and Page Orientation Button
         logoLabel = QLabel(self)
         logoPixmap = QPixmap("images/logo.png")
         scaledLogoPixmap = logoPixmap.scaled(100, 100, Qt.AspectRatioMode.KeepAspectRatio,
                                                   Qt.TransformationMode.SmoothTransformation)
         logoLabel.setPixmap(scaledLogoPixmap)
         logoLabel.setFixedSize(scaledLogoPixmap.size())
-        layout.addWidget(logoLabel)
+
+        pagePreview = QPushButton("Portrait", self)
+        pagePreview.setFixedSize(QSize(60, 100))
+        pagePreview.clicked.connect(self.toggle_orientation)
+
+        logoPageLayout = QHBoxLayout()
+        logoPageLayout.addWidget(logoLabel)
+        logoPageLayout.addWidget(pagePreview)
+        layout.addLayout(logoPageLayout)
+
 
         # Language selection
         languageLabel = QLabel()
@@ -270,6 +282,23 @@ class ImageToPDFConverter(QWidget):
         self.progressStatus = progressStatus
         self.progressBar = progressBar
 
+    def toggle_orientation(self):
+        widget = self.sender()
+        assert isinstance(widget, QPushButton)
+
+        new_size = widget.size().transposed()
+        widget.setFixedSize(new_size)
+
+        self.page_rotate = not self.page_rotate  # Toggle the page_rotate attribute
+        widget.setText({
+            False: "Portrait",
+            True: "Landscape",
+        }[self.page_rotate])
+
+
+
+
+
 
 
 
@@ -362,12 +391,13 @@ class ImageToPDFConverter(QWidget):
         margin_cm = float(self.marginLineEdit.text())
         margin_points = placement.cm_to_points(margin_cm)
         images, min_size = placement.collect_and_resize_images(directory, max_width_cm, max_height_cm)
+        page_rotate = self.page_rotate  # Use the instance variable for page rotation
 
         if not images:
             QMessageBox.warning(self, self.translate_key("error_title"), self.translate_key("no_images_found"))
             return
         try:
-            self.pdfThread = PDFCreatorThread(images, output_pdf_path, margin_points, min_size)
+            self.pdfThread = PDFCreatorThread(images, output_pdf_path, margin_points, min_size, page_rotate)
             self.pdfThread.creationStarted.connect(self.on_pdf_creation_started)
             self.pdfThread.progressUpdated.connect(self.update_progress_bar)
             self.pdfThread.creationFinished.connect(self.on_pdf_creation_finished)
